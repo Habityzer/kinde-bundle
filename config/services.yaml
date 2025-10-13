@@ -1,0 +1,39 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # Make all services in the bundle available
+    Habityzer\KindeBundle\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Event/'
+            - '../src/HabityzerKindeBundle.php'
+
+    # Token Validator Service
+    Habityzer\KindeBundle\Service\KindeTokenValidator:
+        arguments:
+            $kindeDomain: '%habityzer_kinde.domain%'
+            $kindeClientId: '%habityzer_kinde.client_id%'
+            $jwksCacheTtl: '%habityzer_kinde.jwks_cache_ttl%'
+
+    # UserInfo Service
+    Habityzer\KindeBundle\Service\KindeUserInfoService:
+        arguments:
+            $kindeDomain: '%habityzer_kinde.domain%'
+
+    # Token Authenticator
+    Habityzer\KindeBundle\Security\KindeTokenAuthenticator:
+        arguments:
+            $environment: '%kernel.environment%'
+        tags:
+            - { name: 'monolog.logger', channel: 'security' }
+
+    # Webhook Controller
+    Habityzer\KindeBundle\Controller\KindeWebhookController:
+        arguments:
+            $kindeWebhookSecret: '%habityzer_kinde.webhook_secret%'
+        tags: ['controller.service_arguments']
+

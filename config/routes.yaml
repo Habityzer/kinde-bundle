@@ -1,0 +1,9 @@
+# Kinde Webhook Route
+# Can be disabled by setting habityzer_kinde.enable_webhook_route: false
+
+kinde_webhook:
+    path: /api/webhooks/kinde
+    controller: Habityzer\KindeBundle\Controller\KindeWebhookController::kindeWebhook
+    methods: [POST]
+    # This route should be publicly accessible (configure in your security.yaml)
+
