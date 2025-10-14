@@ -6,8 +6,8 @@
         "config/": "%CONFIG_DIR%/"
     },
     "env": {
-        "KINDE_DOMAIN": "your-business.kinde.com",
-        "KINDE_CLIENT_ID": "your-client-id",
+        "KINDE_DOMAIN": "https://your-business.kinde.com",
+        "KINDE_CLIENT_ID": "your-kinde-client-id",
         "KINDE_CLIENT_SECRET": "",
         "KINDE_WEBHOOK_SECRET": ""
     }

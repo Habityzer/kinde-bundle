@@ -1,6 +1,5 @@
 {
     "name": "habityzer/kinde-bundle",
-    "version": "1.0.1",
     "description": "Symfony bundle for Kinde authentication integration with JWT validation, webhooks, and user sync",
     "type": "symfony-bundle",
     "license": "MIT",

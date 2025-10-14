@@ -11,73 +11,79 @@ In ArrayNode.php line 213:
 ```
 
 This occurred because:
-1. The bundle's configuration had required parameters (`domain` and `client_id`)
-2. No Symfony Flex recipe was provided to automatically create the configuration file
-3. The `cache:clear` command ran before the user had a chance to configure the bundle
+1. The bundle's configuration had required parameters (`domain` and `client_id`) with `isRequired()` and `cannotBeEmpty()`
+2. The `cache:clear` command ran during installation before users had a chance to configure the bundle
+3. Symfony's configuration validation failed during cache warming
 
-## Solution
+## Solution Considered: Symfony Flex Recipe
 
-We added a complete Symfony Flex recipe structure that automatically:
+Initially, we tried creating an embedded Symfony Flex recipe (`manifest.json`), but this doesn't work for packages not in the official Symfony recipes repository. Symfony Flex generates an "auto-generated recipe" for such packages, which only registers the bundle but doesn't copy configuration files.
 
-1. **Creates configuration file** - Generates `config/packages/habityzer_kinde.yaml` with proper structure
-2. **Sets environment variables** - Adds placeholder values to `.env` file
-3. **Enables the bundle** - Automatically registers the bundle in `config/bundles.php`
+## Actual Solution: Optional Configuration with Runtime Validation
+
+We made configuration parameters optional during installation, but validated at runtime:
+
+1. **Configuration has safe defaults** - Allows cache:clear to succeed
+2. **Services validate at runtime** - Throw clear errors when used without proper configuration
+3. **Better user experience** - Installation succeeds, configuration required before use
 
 ## Changes Made
 
-### 1. Created `manifest.json`
+### 1. Updated `Configuration.php`
 
-This is the Symfony Flex recipe manifest that tells Symfony how to install the bundle:
+Changed required parameters to have default placeholder values:
 
-```json
-{
-    "bundles": {
-        "Habityzer\\KindeBundle\\HabityzerKindeBundle": ["all"]
-    },
-    "copy-from-recipe": {
-        "config/": "%CONFIG_DIR%/"
-    },
-    "env": {
-        "KINDE_DOMAIN": "your-business.kinde.com",
-        "KINDE_CLIENT_ID": "your-client-id",
-        "KINDE_CLIENT_SECRET": "",
-        "KINDE_WEBHOOK_SECRET": ""
+**Before:**
+```php
+->scalarNode('domain')
+    ->isRequired()        // ❌ Causes installation error
+    ->cannotBeEmpty()
+    ->info('...')
+->end()
+```
+
+**After:**
+```php
+->scalarNode('domain')
+    ->defaultValue('your-business.kinde.com')  // ✅ Safe default
+    ->info('Kinde domain. REQUIRED: Set this in your .env file')
+->end()
+```
+
+### 2. Added Runtime Validation to `KindeTokenValidator.php`
+
+Services now validate configuration when instantiated:
+
+```php
+public function __construct(..., string $kindeDomain, string $kindeClientId, ...) {
+    // Validate configuration is properly set
+    if ($kindeDomain === 'your-business.kinde.com' || empty($kindeDomain)) {
+        throw new \RuntimeException(
+            'Kinde domain is not configured. Please set KINDE_DOMAIN in your .env file. ' .
+            'Get your domain from https://app.kinde.com/settings/environment'
+        );
     }
+    
+    if ($kindeClientId === 'your-kinde-client-id' || empty($kindeClientId)) {
+        throw new \RuntimeException(
+            'Kinde client ID is not configured. Please set KINDE_CLIENT_ID in your .env file. ' .
+            'Get your client ID from https://app.kinde.com/settings/applications'
+        );
+    }
+    // ... rest of constructor
 }
 ```
 
-### 2. Created `config/packages/habityzer_kinde.yaml`
+### 3. Created Configuration Template
 
-This configuration file is automatically copied to the user's project:
-
-```yaml
-habityzer_kinde:
-    domain: '%env(KINDE_DOMAIN)%'
-    client_id: '%env(KINDE_CLIENT_ID)%'
-    client_secret: '%env(KINDE_CLIENT_SECRET)%'
-    webhook_secret: '%env(KINDE_WEBHOOK_SECRET)%'
-    jwks_cache_ttl: 3600
-    enable_webhook_route: true
-```
-
-### 3. Updated `composer.json`
-
-Added Symfony Flex configuration:
-
-```json
-"extra": {
-    "symfony": {
-        "allow-contrib": false,
-        "require": "^6.4|^7.0"
-    }
-}
-```
+Created `config/packages/habityzer_kinde.yaml` as a reference template for users.
 
 ### 4. Updated Documentation
 
-- Added installation troubleshooting to `INSTALL.md`
-- Updated `README.md` with environment variable setup instructions
-- Added version 1.0.1 to `CHANGELOG.md`
+- Updated `README.md` with step-by-step installation
+- Added troubleshooting to `INSTALL.md`
+- Removed version field from `composer.json` (use git tags)
+- Added `VERSIONING_EXPLAINED.md` to clarify version management
 
 ## How It Works Now
 

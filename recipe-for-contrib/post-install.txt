@@ -1,0 +1,21 @@
+<bg=blue;fg=white>              </>
+<bg=blue;fg=white> What's next? </>
+<bg=blue;fg=white>              </>
+
+  * <fg=blue>Configure your Kinde credentials in <comment>.env</></>:
+  
+    - Get your <comment>KINDE_DOMAIN</> from: https://app.kinde.com/settings/environment
+    - Get your <comment>KINDE_CLIENT_ID</> from: https://app.kinde.com/settings/applications
+  
+  * <fg=blue>Implement the <comment>KindeUserProviderInterface</></> to sync users with your database
+  
+  * <fg=blue>Enable the authenticator in <comment>config/packages/security.yaml</></>:
+  
+    security:
+        firewalls:
+            api:
+                custom_authenticators:
+                    - Habityzer\KindeBundle\Security\KindeTokenAuthenticator
+  
+  * Read the documentation at <comment>https://github.com/habityzer/kinde-bundle</>
+

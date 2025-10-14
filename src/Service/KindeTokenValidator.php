@@ -28,6 +28,21 @@ class KindeTokenValidator
         string $kindeClientId,
         int $jwksCacheTtl = 3600
     ) {
+        // Validate configuration is properly set (not default placeholder values)
+        if ($kindeDomain === 'your-business.kinde.com' || empty($kindeDomain)) {
+            throw new \RuntimeException(
+                'Kinde domain is not configured. Please set KINDE_DOMAIN in your .env file. ' .
+                'Get your domain from https://app.kinde.com/settings/environment'
+            );
+        }
+        
+        if ($kindeClientId === 'your-kinde-client-id' || empty($kindeClientId)) {
+            throw new \RuntimeException(
+                'Kinde client ID is not configured. Please set KINDE_CLIENT_ID in your .env file. ' .
+                'Get your client ID from https://app.kinde.com/settings/applications'
+            );
+        }
+        
         $this->kindeDomain = rtrim($kindeDomain, '/');
         $this->kindeJwksUrl = $this->kindeDomain . '/.well-known/jwks.json';
         $this->kindeClientId = $kindeClientId;

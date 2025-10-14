@@ -5,16 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-10-14
+
+### Fixed
+- Fixed installation error: "The child config 'domain' under 'habityzer_kinde' must be configured"
+- Configuration parameters now have safe default values allowing successful installation
+- Added runtime validation with helpful error messages when services are used without proper configuration
+
+### Added
+- Created Symfony Flex recipe ready for submission to symfony/recipes-contrib
+- Added comprehensive recipe submission documentation
+- Added VERSIONING_EXPLAINED.md to clarify git tag versioning
+
+### Changed
+- Configuration parameters (`domain`, `client_id`) now optional with placeholder defaults
+- Services throw clear RuntimeException if used with default/empty configuration values
+- Updated installation documentation with troubleshooting steps
+- Removed version field from composer.json (versions managed via git tags)
+
 ## [1.0.1] - 2025-10-14
 
 ### Fixed
-- Added Symfony Flex recipe to automatically create configuration file during installation
-- Fixed installation error: "The child config 'domain' under 'habityzer_kinde' must be configured"
-- Environment variables now properly initialized with example values during `composer require`
-
-### Changed
-- Updated installation documentation with troubleshooting steps
-- Added automatic creation of `config/packages/habityzer_kinde.yaml` via Flex recipe
+- Initial fix attempt (superseded by 1.0.2)
 
 ## [1.0.0] - 2025-10-13
 

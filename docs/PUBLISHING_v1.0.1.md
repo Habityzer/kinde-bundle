@@ -6,22 +6,25 @@ This version fixes the installation error where required configuration parameter
 
 ## Pre-Release Checklist
 
-- [x] Version bumped to 1.0.1 in `composer.json`
+- [x] Configuration.php updated to allow installation without errors
+- [x] Runtime validation added to services
 - [x] CHANGELOG.md updated with version 1.0.1 notes
-- [x] Symfony Flex recipe created (`manifest.json`)
+- [x] Git tag will be created as `v1.0.1` (Composer auto-detects from tags)
 - [x] Configuration file template created (`config/packages/habityzer_kinde.yaml`)
 - [x] Documentation updated (README.md, INSTALL.md)
 - [x] No linter errors
 
 ## Files Changed
 
-1. **composer.json** - Added version 1.0.1 and Symfony Flex extra configuration
-2. **manifest.json** - New: Symfony Flex recipe manifest
-3. **config/packages/habityzer_kinde.yaml** - New: Configuration template
+1. **src/DependencyInjection/Configuration.php** - Made domain/client_id optional with safe defaults
+2. **src/Service/KindeTokenValidator.php** - Added runtime configuration validation  
+3. **composer.json** - Removed version field (managed via git tags)
 4. **CHANGELOG.md** - Added v1.0.1 release notes
-5. **README.md** - Added environment variable setup instructions
-6. **INSTALL.md** - Added troubleshooting section for configuration error
-7. **docs/INSTALLATION_FIX.md** - New: Detailed explanation of the fix
+5. **README.md** - Updated installation steps
+6. **INSTALL.md** - Added troubleshooting section
+7. **config/packages/habityzer_kinde.yaml** - New: Configuration template/reference
+8. **docs/INSTALLATION_FIX.md** - New: Detailed explanation
+9. **VERSIONING_EXPLAINED.md** - New: Git tag versioning guide
 
 ## Publishing Steps
 
@@ -34,6 +37,8 @@ git commit -m "Release v1.0.1: Add Symfony Flex recipe to fix installation error
 
 ### 2. Create Git Tag
 
+**Important:** Git tags should use "v" prefix (v1.0.1), but `composer.json` should NOT have a version field. Composer automatically detects versions from git tags and normalizes them (removes the "v").
+
 ```bash
 git tag -a v1.0.1 -m "Version 1.0.1
 
@@ -41,6 +46,11 @@ git tag -a v1.0.1 -m "Version 1.0.1
 - Fixed installation error with missing required configuration
 - Updated documentation with troubleshooting steps"
 ```
+
+**Result:**
+- Git tag: `v1.0.1` (with "v")
+- Packagist shows: `1.0.1` (without "v") ✓
+- This is normal and expected!
 
 ### 3. Push to Repository
 

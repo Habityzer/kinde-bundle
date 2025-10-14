@@ -13,20 +13,23 @@ This happened during the `cache:clear` step because the bundle required configur
 
 ## ✅ The Fix
 
-I've added a **Symfony Flex recipe** that automatically configures the bundle during installation.
+I've made the configuration parameters **optional with safe defaults**, allowing the bundle to install without errors.
 
 ### What Changed:
 
-1. **Created `manifest.json`** - Symfony Flex recipe that:
-   - Automatically copies configuration to user's project
-   - Sets up environment variables with placeholder values
-   - Registers the bundle
+1. **Updated `Configuration.php`** - Changed required parameters to have default placeholder values:
+   - `domain` defaults to `'your-business.kinde.com'`
+   - `client_id` defaults to `'your-kinde-client-id'`
+   - These allow cache:clear to succeed during installation
 
-2. **Created `config/packages/habityzer_kinde.yaml`** - Configuration template that gets copied to user projects
+2. **Added Runtime Validation** - Services check configuration when used:
+   - `KindeTokenValidator` validates config in constructor
+   - Throws helpful `RuntimeException` if defaults are not replaced
+   - Clear error messages with links to Kinde dashboard
 
-3. **Updated `composer.json`** - Added Symfony Flex support
+3. **Created `config/packages/habityzer_kinde.yaml`** - Template for users to copy
 
-4. **Updated Documentation** - Added troubleshooting steps
+4. **Updated Documentation** - Added clear installation and configuration steps
 
 ## 📦 What Happens Now
 
@@ -34,14 +37,20 @@ When users install the bundle with `composer require habityzer/kinde-bundle`:
 
 ```bash
 ✓ Bundle is downloaded
-✓ Config file is automatically created at config/packages/habityzer_kinde.yaml
-✓ Environment variables are added to .env with placeholder values:
-  - KINDE_DOMAIN=your-business.kinde.com
-  - KINDE_CLIENT_ID=your-client-id
-  - KINDE_CLIENT_SECRET=
-  - KINDE_WEBHOOK_SECRET=
 ✓ Bundle is registered in config/bundles.php
-✓ cache:clear succeeds ✓
+✓ cache:clear succeeds (using safe default config values) ✓
+✓ Installation completes successfully!
+```
+
+Then users need to:
+1. Add environment variables to `.env`
+2. Create `config/packages/habityzer_kinde.yaml`
+3. Clear cache again with real values
+
+If they try to use the bundle without configuration, they get a helpful error:
+```
+RuntimeException: Kinde domain is not configured. Please set KINDE_DOMAIN 
+in your .env file. Get your domain from https://app.kinde.com/settings/environment
 ```
 
 ## 🚀 Next Steps to Release
@@ -54,16 +63,18 @@ git status
 ```
 
 Files modified:
-- `composer.json` (version 1.0.1, added Flex support)
+- `src/DependencyInjection/Configuration.php` (made params optional with defaults)
+- `src/Service/KindeTokenValidator.php` (added runtime validation)
+- `composer.json` (removed version field, versions from git tags)
 - `CHANGELOG.md` (added v1.0.1 notes)
-- `README.md` (added env setup instructions)
+- `README.md` (updated installation steps)
 - `INSTALL.md` (added troubleshooting)
 
 Files created:
-- `manifest.json` (Flex recipe)
-- `config/packages/habityzer_kinde.yaml` (config template)
+- `config/packages/habityzer_kinde.yaml` (config template/reference)
 - `docs/INSTALLATION_FIX.md` (detailed explanation)
 - `docs/PUBLISHING_v1.0.1.md` (release guide)
+- `VERSIONING_EXPLAINED.md` (explains git tag versioning)
 
 ### 2. Commit and Tag
 

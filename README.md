@@ -17,16 +17,40 @@ Symfony bundle for Kinde authentication integration with JWT validation, webhook
 composer require habityzer/kinde-bundle
 ```
 
-After installation, configure your environment variables in `.env`:
+The bundle installs successfully without configuration, but you **must** configure it before using:
+
+### 1. Set Environment Variables
+
+Add to your `.env` file:
 
 ```env
-KINDE_DOMAIN=your-business.kinde.com
-KINDE_CLIENT_ID=your-client-id
+KINDE_DOMAIN=https://your-business.kinde.com
+KINDE_CLIENT_ID=your-client-id-from-kinde
 KINDE_CLIENT_SECRET=your-client-secret
 KINDE_WEBHOOK_SECRET=your-webhook-secret
 ```
 
-> **Note:** If you encounter a configuration error during installation, make sure to set these environment variables before running `php bin/console cache:clear`.
+Get these values from your [Kinde Dashboard](https://app.kinde.com/settings/applications).
+
+### 2. Create Configuration File
+
+Create `config/packages/habityzer_kinde.yaml`:
+
+```yaml
+habityzer_kinde:
+    domain: '%env(KINDE_DOMAIN)%'
+    client_id: '%env(KINDE_CLIENT_ID)%'
+    client_secret: '%env(KINDE_CLIENT_SECRET)%'
+    webhook_secret: '%env(KINDE_WEBHOOK_SECRET)%'
+```
+
+### 3. Clear Cache
+
+```bash
+php bin/console cache:clear
+```
+
+> **Note:** The bundle will throw helpful runtime errors if you try to use authentication without proper configuration.
 
 ## Configuration
 
