@@ -292,6 +292,35 @@ https://your-api.com/api/webhooks/kinde
 
 ## Troubleshooting
 
+### Issue: Configuration error during installation
+**Error:** `The child config "domain" under "habityzer_kinde" must be configured`
+
+**Solution:** This happens when the bundle is installed but environment variables aren't set yet. To fix:
+
+1. Add the required environment variables to your `.env` file:
+```env
+KINDE_DOMAIN=your-business.kinde.com
+KINDE_CLIENT_ID=your-client-id
+KINDE_CLIENT_SECRET=your-client-secret
+KINDE_WEBHOOK_SECRET=your-webhook-secret
+```
+
+2. Make sure the configuration file exists at `config/packages/habityzer_kinde.yaml`. If not, create it with:
+```yaml
+habityzer_kinde:
+    domain: '%env(KINDE_DOMAIN)%'
+    client_id: '%env(KINDE_CLIENT_ID)%'
+    client_secret: '%env(KINDE_CLIENT_SECRET)%'
+    webhook_secret: '%env(KINDE_WEBHOOK_SECRET)%'
+    jwks_cache_ttl: 3600
+    enable_webhook_route: true
+```
+
+3. Clear the cache:
+```bash
+php bin/console cache:clear
+```
+
 ### Issue: "User provider not found"
 **Solution:** Make sure you've registered your `UserProvider` service with the correct tag.
 

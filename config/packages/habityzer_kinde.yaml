@@ -1,0 +1,19 @@
+habityzer_kinde:
+    # Kinde domain (e.g., your-business.kinde.com)
+    domain: '%env(KINDE_DOMAIN)%'
+    
+    # Kinde application client ID
+    client_id: '%env(KINDE_CLIENT_ID)%'
+    
+    # Kinde application client secret (optional for frontend-only auth)
+    client_secret: '%env(KINDE_CLIENT_SECRET)%'
+    
+    # Webhook secret for signature verification
+    webhook_secret: '%env(KINDE_WEBHOOK_SECRET)%'
+    
+    # JWKS cache time-to-live in seconds (default: 1 hour)
+    jwks_cache_ttl: 3600
+    
+    # Automatically register webhook route at /api/webhooks/kinde
+    enable_webhook_route: true
+
