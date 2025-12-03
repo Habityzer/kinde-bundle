@@ -277,10 +277,15 @@ php bin/console kinde:debug-token YOUR_JWT_TOKEN
 ```
 
 ### Test API Request:
+
+**Important:** Prefix your token with `kinde_`:
+
 ```bash
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+curl -H "Authorization: Bearer kinde_YOUR_JWT_TOKEN" \
      https://your-api.com/api/your-endpoint
 ```
+
+The `kinde_` prefix allows the authenticator to identify Kinde tokens and coexist with other authentication methods.
 
 ### Test Webhook:
 Configure webhook URL in Kinde dashboard:

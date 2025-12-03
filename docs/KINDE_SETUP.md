@@ -209,19 +209,26 @@ The bundle automatically verifies webhook signatures using HMAC SHA256. Ensure y
 - **ID Token**: Contains user identity claims (email, name, etc.)
 - **Access Token**: Used to authorize API requests
 
-The bundle works with access tokens. Ensure your frontend sends the access token (not ID token) in API requests:
+The bundle works with access tokens. Ensure your frontend sends the access token (not ID token) in API requests.
+
+**Important:** The bundle requires tokens to be prefixed with `kinde_` to identify them as Kinde tokens and allow coexistence with other authentication methods.
 
 ```javascript
-// Frontend: Get access token
+// Frontend: Get access token from Kinde
 const accessToken = await kinde.getToken();
 
-// Send to your API
+// Add kinde_ prefix before sending to your API
 fetch('https://your-api.com/api/endpoint', {
   headers: {
-    'Authorization': `Bearer ${accessToken}`,
+    'Authorization': `Bearer kinde_${accessToken}`,
   },
 });
 ```
+
+**Why the prefix?** 
+- Allows the authenticator to identify Kinde tokens
+- Enables multiple authentication methods (Kinde + API keys, etc.)
+- The authenticator automatically strips the prefix before validating the JWT
 
 ---
 
@@ -261,9 +268,18 @@ Expected output should include:
 
 ### Test API Authentication
 
+**Important:** Remember to add the `kinde_` prefix to your token:
+
 ```bash
-curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+# Add kinde_ prefix to your JWT token
+curl -H "Authorization: Bearer kinde_YOUR_JWT_TOKEN" \
      https://your-api.com/api/protected-endpoint
+```
+
+If you forget the prefix, you'll see in the logs:
+
+```
+[DEBUG] KindeTokenAuthenticator: Not supporting request - token does not start with kinde_ prefix
 ```
 
 ### Test Webhook
@@ -353,4 +369,5 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - [Kinde API Reference](https://docs.kinde.com/api/)
 - [JWT.io Debugger](https://jwt.io/) - Inspect token contents
 - [Bundle README](../README.md) - Quick start guide
+
 

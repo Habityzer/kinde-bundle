@@ -34,6 +34,7 @@ class KindeTokenAuthenticator extends AbstractAuthenticator
     {
         // In test environment, don't use Kinde validation - let other authenticators handle it
         if ($this->environment === 'test') {
+            $this->logger->debug('KindeTokenAuthenticator: Not supporting request - test environment');
             return false;
         }
         
@@ -41,13 +42,25 @@ class KindeTokenAuthenticator extends AbstractAuthenticator
         $authHeader = $request->headers->get('Authorization');
         
         if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            $this->logger->debug('KindeTokenAuthenticator: Not supporting request - no Bearer token found');
             return false;
         }
         
-        // Don't process app tokens - let AppTokenAuthenticator handle them
-        if (str_starts_with($authHeader, 'Bearer app_')) {
+        // Extract token (remove "Bearer " prefix)
+        $token = substr($authHeader, 7);
+        
+        // Only process tokens with kinde_ prefix
+        // This allows other authenticators to handle non-Kinde tokens
+        if (!str_starts_with($token, 'kinde_')) {
+            $this->logger->debug('KindeTokenAuthenticator: Not supporting request - token does not start with kinde_ prefix', [
+                'token_preview' => substr($token, 0, 10) . '...'
+            ]);
             return false;
         }
+        
+        $this->logger->debug('KindeTokenAuthenticator: Supporting request - valid Kinde token detected', [
+            'token_preview' => substr($token, 0, 15) . '...'
+        ]);
         
         return true;
     }
@@ -62,6 +75,14 @@ class KindeTokenAuthenticator extends AbstractAuthenticator
         }
 
         $token = substr($authHeader, 7); // Remove "Bearer " prefix
+        
+        // Remove kinde_ prefix to get pure JWT token
+        if (str_starts_with($token, 'kinde_')) {
+            $token = substr($token, 6); // Remove "kinde_" prefix
+            $this->logger->debug('Removed kinde_ prefix from token', [
+                'jwt_preview' => substr($token, 0, 20) . '...'
+            ]);
+        }
 
         try {
             // Validate token with Kinde (SECURE - cryptographically verified)

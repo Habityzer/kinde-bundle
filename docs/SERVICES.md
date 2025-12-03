@@ -301,7 +301,7 @@ This delegates to your `KindeUserProviderInterface::handleUserDeletion()` method
 
 ## KindeTokenAuthenticator
 
-Symfony security authenticator that handles Bearer token authentication.
+Symfony security authenticator that handles Bearer token authentication with Kinde JWT tokens.
 
 **Class:** `Habityzer\KindeBundle\Security\KindeTokenAuthenticator`
 
@@ -309,11 +309,38 @@ This authenticator is typically configured in `security.yaml` and not used direc
 
 ### Behavior
 
-1. **Token Detection:** Supports requests with `Authorization: Bearer <token>` header
-2. **Token Filtering:** Skips tokens prefixed with `app_` (allows other authenticators to handle them)
-3. **Test Environment:** Automatically disabled in `test` environment
-4. **Email Fallback:** If token lacks email claim, fetches from Kinde UserInfo endpoint
-5. **User Sync:** Automatically syncs users on every authentication
+1. **Token Detection:** Supports requests with `Authorization: Bearer kinde_<jwt>` header
+2. **Token Filtering:** Only processes tokens with `kinde_` prefix (allows other authenticators to handle non-Kinde tokens)
+3. **Prefix Removal:** Automatically strips `kinde_` prefix before validating the JWT
+4. **Test Environment:** Automatically disabled in `test` environment
+5. **Email Fallback:** If token lacks email claim, fetches from Kinde UserInfo endpoint
+6. **User Sync:** Automatically syncs users on every authentication
+7. **Debug Logging:** Logs support decisions and authentication steps to the `security` channel
+
+### Required Token Format
+
+**Important:** Tokens must be prefixed with `kinde_`:
+
+```http
+Authorization: Bearer kinde_eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+The authenticator:
+1. Checks for `kinde_` prefix (in `supports()`)
+2. Removes the prefix (in `authenticate()`)
+3. Validates the pure JWT token with Kinde
+
+**Client-side example:**
+
+```javascript
+// Add kinde_ prefix to your JWT token
+const jwt = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...';
+const authHeader = `Bearer kinde_${jwt}`;
+
+fetch('/api/endpoint', {
+    headers: { 'Authorization': authHeader }
+});
+```
 
 ### Configuration
 
@@ -331,19 +358,45 @@ security:
 ### Authentication Flow
 
 ```
-1. Request arrives with Authorization: Bearer <token>
+1. Request arrives with Authorization: Bearer kinde_<jwt>
 2. KindeTokenAuthenticator::supports() checks if it should handle
    - Returns false if no Bearer token
-   - Returns false if token starts with "app_"
+   - Returns false if token doesn't start with "kinde_"
    - Returns false in test environment
+   - Logs decision at DEBUG level
 3. KindeTokenAuthenticator::authenticate()
-   - Validates token via KindeTokenValidator
+   - Extracts token from Authorization header
+   - Removes "Bearer " prefix
+   - Removes "kinde_" prefix to get pure JWT
+   - Validates JWT via KindeTokenValidator
    - Extracts user info from token
    - If email missing, fetches from UserInfo endpoint
    - Syncs user via KindeUserSync
    - Returns SelfValidatingPassport with user
 4. On success, request continues
-5. On failure, returns 401 JSON response
+5. On failure, returns 401 JSON response with error details
+```
+
+### Debug Logging
+
+The authenticator logs to the `security` channel:
+
+```
+[DEBUG] KindeTokenAuthenticator: Supporting request - valid Kinde token detected
+[INFO] Email missing from token, fetching from Kinde UserInfo endpoint
+[INFO] Kinde token authentication successful
+[WARNING] Kinde token authentication failed error="Token validation failed: ..."
+[ERROR] Authentication failure message="Token validation failed: ..." path="/api/endpoint"
+```
+
+View logs:
+
+```bash
+# Development
+tail -f var/log/dev.log | grep KindeTokenAuthenticator
+
+# Or filter by security channel
+tail -f var/log/dev.log | grep SECURI
 ```
 
 ---

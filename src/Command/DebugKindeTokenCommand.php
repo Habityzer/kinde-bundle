@@ -30,6 +30,12 @@ class DebugKindeTokenCommand extends Command
             $token = substr($token, 7);
         }
 
+        // Remove "kinde_" prefix if present
+        if (str_starts_with($token, 'kinde_')) {
+            $token = substr($token, 6);
+            $io->note('Removed kinde_ prefix from token');
+        }
+
         // Split JWT into parts
         $parts = explode('.', $token);
         

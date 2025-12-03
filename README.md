@@ -167,7 +167,31 @@ security:
                 - Habityzer\KindeBundle\Security\KindeTokenAuthenticator
 ```
 
-### 3. Subscribe to Webhook Events
+### 3. Token Format
+
+When making API requests, prefix your Kinde JWT tokens with `kinde_`:
+
+```http
+Authorization: Bearer kinde_eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZF8xMjM0In0...
+```
+
+This prefix allows the authenticator to identify Kinde tokens and coexist with other authentication methods. The authenticator automatically removes the `kinde_` prefix before validating the JWT.
+
+**Client-side example (JavaScript):**
+
+```javascript
+// Prepend kinde_ to your JWT token
+const kindeToken = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImtpZF8xMjM0In0...';
+const authHeader = `Bearer kinde_${kindeToken}`;
+
+fetch('/api/protected-endpoint', {
+    headers: {
+        'Authorization': authHeader
+    }
+});
+```
+
+### 4. Subscribe to Webhook Events
 
 ```php
 namespace App\EventSubscriber;
@@ -223,8 +247,13 @@ The bundle dispatches the following Symfony events:
 Debug JWT tokens to inspect claims and troubleshoot issues:
 
 ```bash
+# Accepts tokens with or without kinde_ prefix
 php bin/console kinde:debug-token YOUR_JWT_TOKEN
+php bin/console kinde:debug-token kinde_YOUR_JWT_TOKEN
+php bin/console kinde:debug-token "Bearer kinde_YOUR_JWT_TOKEN"
 ```
+
+The command automatically strips `Bearer ` and `kinde_` prefixes if present.
 
 Output includes:
 - Token header (algorithm, type)

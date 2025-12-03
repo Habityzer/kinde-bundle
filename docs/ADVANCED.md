@@ -225,7 +225,7 @@ class RefreshJwksCommand extends Command
 
 The bundle's authenticator can coexist with other authenticators.
 
-### App Token + Kinde Token
+### Kinde Token + Custom Token
 
 ```yaml
 # config/packages/security.yaml
@@ -236,22 +236,33 @@ security:
             stateless: true
             custom_authenticators:
                 - Habityzer\KindeBundle\Security\KindeTokenAuthenticator
-                - App\Security\AppTokenAuthenticator
+                - App\Security\CustomTokenAuthenticator
             entry_point: Habityzer\KindeBundle\Security\KindeTokenAuthenticator
 ```
 
 ### How Token Routing Works
 
-The `KindeTokenAuthenticator` automatically skips tokens prefixed with `app_`:
+The `KindeTokenAuthenticator` **only processes tokens with the `kinde_` prefix**:
 
 ```php
 // In KindeTokenAuthenticator::supports()
-if (str_starts_with($authHeader, 'Bearer app_')) {
+// Extract token (remove "Bearer " prefix)
+$token = substr($authHeader, 7);
+
+// Only process tokens with kinde_ prefix
+if (!str_starts_with($token, 'kinde_')) {
+    $this->logger->debug('Not supporting request - token does not start with kinde_ prefix');
     return false; // Let other authenticators handle it
 }
 ```
 
+**Token Format:**
+- **Kinde tokens:** `Authorization: Bearer kinde_eyJhbGciOi...` → Processed by KindeTokenAuthenticator
+- **Custom tokens:** `Authorization: Bearer app_xyz123` → Ignored by KindeTokenAuthenticator
+
 ### Custom App Token Authenticator
+
+Here's an example authenticator for custom app tokens:
 
 ```php
 <?php
@@ -261,19 +272,27 @@ namespace App\Security;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 // ... other imports
 
-class AppTokenAuthenticator extends AbstractAuthenticator
+class CustomTokenAuthenticator extends AbstractAuthenticator
 {
     public function supports(Request $request): ?bool
     {
         $authHeader = $request->headers->get('Authorization');
         
-        // Only handle app tokens
-        return $authHeader && str_starts_with($authHeader, 'Bearer app_');
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return false;
+        }
+        
+        $token = substr($authHeader, 7);
+        
+        // Only handle tokens with your custom prefix (or without kinde_ prefix)
+        return str_starts_with($token, 'app_');
     }
 
     public function authenticate(Request $request): Passport
     {
-        $token = str_replace('Bearer app_', '', $request->headers->get('Authorization'));
+        $authHeader = $request->headers->get('Authorization');
+        $token = substr($authHeader, 7); // Remove "Bearer "
+        $token = substr($token, 4); // Remove "app_" prefix
         
         // Your app token validation logic
         $apiToken = $this->apiTokenRepository->findOneBy(['token' => $token]);
@@ -289,6 +308,22 @@ class AppTokenAuthenticator extends AbstractAuthenticator
     
     // ... other methods
 }
+```
+
+### Token Examples
+
+```bash
+# Kinde token - handled by KindeTokenAuthenticator
+curl -H "Authorization: Bearer kinde_eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." \
+     https://your-api.com/api/users
+
+# Custom app token - handled by CustomTokenAuthenticator  
+curl -H "Authorization: Bearer app_xyz123abc456def789" \
+     https://your-api.com/api/users
+
+# Unknown token format - returns 401
+curl -H "Authorization: Bearer random_token_without_prefix" \
+     https://your-api.com/api/users
 ```
 
 ---
@@ -673,4 +708,5 @@ public function onUserUpdated(KindeUserUpdatedEvent $event): void
 - [Services API](SERVICES.md) - Service methods reference
 - [Kinde Setup](KINDE_SETUP.md) - Dashboard configuration
 - [Installation Guide](../INSTALL.md) - Step-by-step setup
+
 
