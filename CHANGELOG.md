@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `email_verified` (bool|null) is now part of the user data handed to `KindeUserProviderInterface`:
+  taken from the token payload when present, otherwise from Kinde's UserInfo endpoint
+  (`/oauth2/v2/user_profile`, requires the `email` scope). The authenticator now consults
+  UserInfo whenever `email` **or** `email_verified` is missing from the token (access tokens
+  carry neither by default). Apps that link an existing local account by email should only
+  do so when this is `true`.
+
+### Fixed
+- Merging UserInfo data no longer drops `false` values (`email_verified: false` was filtered out as empty).
+
 ## [1.0.2] - 2025-10-14
 
 ### Fixed

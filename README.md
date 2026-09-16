@@ -111,6 +111,10 @@ class UserProvider implements KindeUserProviderInterface
     
     public function syncUser(array $kindeUserData): object
     {
+        // Linking an EXISTING local account by email? Only do it when Kinde has verified
+        // that address ($kindeUserData['email_verified'] === true), and never into an
+        // account that has a password or elevated roles — otherwise anyone who can get a
+        // Kinde token for that email takes the account over.
         $user = new User();
         $user->setKindeId($kindeUserData['kinde_id']);
         $user->setEmail($kindeUserData['email']);

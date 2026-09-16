@@ -71,6 +71,9 @@ class KindeUserInfoService
         return [
             'kinde_id' => $userInfo['sub'] ?? null,
             'email' => $userInfo['email'] ?? null,
+            // Present when the "email" scope was granted; lets apps refuse to link an
+            // existing account by an address Kinde has not verified.
+            'email_verified' => isset($userInfo['email_verified']) ? (bool) $userInfo['email_verified'] : null,
             'given_name' => $userInfo['given_name'] ?? null,
             'family_name' => $userInfo['family_name'] ?? null,
             'name' => $userInfo['name'] ?? null,

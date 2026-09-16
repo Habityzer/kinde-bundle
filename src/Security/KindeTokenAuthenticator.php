@@ -91,17 +91,20 @@ class KindeTokenAuthenticator extends AbstractAuthenticator
             // Extract user information from token
             $userInfo = $this->tokenValidator->extractUserInfo($payload);
             
-            // If email is missing from token, fetch from Kinde UserInfo endpoint (SECURE)
-            if (empty($userInfo['email'])) {
-                $this->logger->info('Email missing from token, fetching from Kinde UserInfo endpoint');
+            // If email or its verification status is missing from the token, fetch from
+            // Kinde's UserInfo endpoint (SECURE, server-to-server). Access tokens carry
+            // neither by default; apps that link accounts by email need both.
+            if (empty($userInfo['email']) || !isset($userInfo['email_verified'])) {
+                $this->logger->info('Email or email_verified missing from token, fetching from Kinde UserInfo endpoint');
                 
                 try {
                     // Make secure server-to-server call to Kinde
                     $kindeUserInfo = $this->userInfoService->getUserInfo($token);
                     $userInfoFromEndpoint = $this->userInfoService->extractUserData($kindeUserInfo);
                     
-                    // Merge data (prefer UserInfo endpoint data for user details)
-                    $userInfo = array_merge($userInfo, array_filter($userInfoFromEndpoint));
+                    // Merge data (prefer UserInfo endpoint data for user details). Keep
+                    // boolean false: email_verified=false must not be dropped as "empty".
+                    $userInfo = array_merge($userInfo, array_filter($userInfoFromEndpoint, static fn ($value) => $value !== null));
                     
                     $this->logger->info('Successfully fetched user info from Kinde', [
                         'email' => $userInfo['email'] ?? 'still missing'
