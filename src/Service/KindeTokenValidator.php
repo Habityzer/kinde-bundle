@@ -204,6 +204,9 @@ class KindeTokenValidator
         return [
             'kinde_id' => $payload['sub'] ?? null,
             'email' => $email,
+            // null when the token carries no verification claim (access tokens usually
+            // don't); the authenticator then completes it from the UserInfo endpoint.
+            'email_verified' => isset($payload['email_verified']) ? (bool) $payload['email_verified'] : null,
             'given_name' => $payload['given_name'] ?? null,
             'family_name' => $payload['family_name'] ?? null,
             'name' => $payload['name'] ?? null,
