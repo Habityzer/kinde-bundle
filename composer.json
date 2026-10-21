@@ -22,7 +22,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",
-        "symfony/phpunit-bridge": "^6.4|^7.0"
+        "symfony/phpunit-bridge": "^6.4|^7.0",
+        "symfony/yaml": "^6.4|^7.0"
     },
     "autoload": {
         "psr-4": {
@@ -46,4 +47,3 @@
     "minimum-stability": "stable",
     "prefer-stable": true
 }
-

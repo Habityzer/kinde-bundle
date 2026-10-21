@@ -24,6 +24,16 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue('your-kinde-client-id')
                     ->info('Kinde application client ID. REQUIRED: Set this in your .env file')
                 ->end()
+                // variableNode, not arrayNode: a prototyped array node refuses env placeholders,
+                // and this list is meant to come from '%env(csv:KINDE_ALLOWED_CLIENT_IDS)%'.
+                ->variableNode('allowed_client_ids')
+                    ->info('Additional Kinde application client IDs whose access tokens are accepted (e.g. a native mobile app in the same Kinde business). Empty = only client_id. List or %env(csv:...)%; blank entries are ignored')
+                    ->defaultValue([])
+                    ->validate()
+                        ->ifTrue(static fn ($value) => !\is_array($value) && !\is_string($value))
+                        ->thenInvalid('allowed_client_ids must be a list of client IDs (or an env(csv:...) placeholder), got %s')
+                    ->end()
+                ->end()
                 ->scalarNode('client_secret')
                     ->defaultValue('')
                     ->info('Kinde application client secret (optional for frontend-only auth)')

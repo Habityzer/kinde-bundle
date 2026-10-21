@@ -18,6 +18,7 @@ services:
             $kindeDomain: '%habityzer_kinde.domain%'
             $kindeClientId: '%habityzer_kinde.client_id%'
             $jwksCacheTtl: '%habityzer_kinde.jwks_cache_ttl%'
+            $allowedClientIds: '%habityzer_kinde.allowed_client_ids%'
 
     # UserInfo Service
     Habityzer\KindeBundle\Service\KindeUserInfoService:

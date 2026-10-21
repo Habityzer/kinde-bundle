@@ -20,6 +20,7 @@ class HabityzerKindeExtension extends Extension
         // Register configuration as parameters
         $container->setParameter('habityzer_kinde.domain', $config['domain']);
         $container->setParameter('habityzer_kinde.client_id', $config['client_id']);
+        $container->setParameter('habityzer_kinde.allowed_client_ids', $config['allowed_client_ids']);
         $container->setParameter('habityzer_kinde.client_secret', $config['client_secret']);
         $container->setParameter('habityzer_kinde.webhook_secret', $config['webhook_secret']);
         $container->setParameter('habityzer_kinde.jwks_cache_ttl', $config['jwks_cache_ttl']);

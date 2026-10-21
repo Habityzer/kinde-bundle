@@ -19,14 +19,21 @@ class KindeTokenValidator
     private string $kindeClientId;
     private string $kindeDomain;
     private int $jwksCacheTtl;
+    /** @var list<string> client IDs accepted in addition to $kindeClientId */
+    private array $allowedClientIds;
 
+    /**
+     * @param list<string> $allowedClientIds Other Kinde applications (same business, same issuer) whose
+     *                                       tokens this API accepts, e.g. a native mobile app. Empty = client_id only.
+     */
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
         string $kindeDomain,
         string $kindeClientId,
-        int $jwksCacheTtl = 3600
+        int $jwksCacheTtl = 3600,
+        array $allowedClientIds = []
     ) {
         // Validate configuration is properly set (not default placeholder values)
         if ($kindeDomain === 'your-business.kinde.com' || empty($kindeDomain)) {
@@ -47,6 +54,20 @@ class KindeTokenValidator
         $this->kindeJwksUrl = $this->kindeDomain . '/.well-known/jwks.json';
         $this->kindeClientId = $kindeClientId;
         $this->jwksCacheTtl = $jwksCacheTtl;
+        $this->allowedClientIds = array_values(array_filter(
+            array_map(static fn ($id) => trim((string) $id), $allowedClientIds),
+            static fn (string $id) => $id !== ''
+        ));
+    }
+
+    /**
+     * Client IDs accepted next to the configured client_id (normalised: trimmed, blanks removed)
+     *
+     * @return list<string>
+     */
+    public function getAllowedClientIds(): array
+    {
+        return $this->allowedClientIds;
     }
 
     /**
@@ -125,6 +146,8 @@ class KindeTokenValidator
 
     /**
      * Validate token audience - accept either 'aud' or 'azp' claim
+     *
+     * The resolved audience must be the configured client_id or one of allowed_client_ids.
      */
     private function validateAudience(array $payload): void
     {
@@ -149,18 +172,28 @@ class KindeTokenValidator
             throw new \RuntimeException('Token missing both audience (aud) and authorized party (azp) claims');
         }
         
-        // Validate against expected client ID
-        if ($audience !== $this->kindeClientId) {
-            $this->logger->warning('Token audience mismatch', [
-                'expected' => $this->kindeClientId,
-                'actual' => $audience,
-                'claim_used' => isset($payload['azp']) ? 'azp' : 'aud'
-            ]);
-            throw new \RuntimeException(
-                'Invalid token audience. Expected: ' . $this->kindeClientId . 
-                ', Got: ' . $audience
-            );
+        // Validate against the expected client ID, then the allow-list (other apps of the same business)
+        if ($audience === $this->kindeClientId) {
+            return;
         }
+
+        if (in_array($audience, $this->allowedClientIds, true)) {
+            $this->logger->info('Token audience accepted from allowed_client_ids', [
+                'client_id' => $audience
+            ]);
+            return;
+        }
+
+        $this->logger->warning('Token audience mismatch', [
+            'expected' => $this->kindeClientId,
+            'allowed' => $this->allowedClientIds,
+            'actual' => $audience,
+            'claim_used' => isset($payload['azp']) ? 'azp' : 'aud'
+        ]);
+        throw new \RuntimeException(
+            'Invalid token audience. Expected: ' . $this->kindeClientId .
+            ', Got: ' . $audience
+        );
     }
 
     /**
