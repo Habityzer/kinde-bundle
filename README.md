@@ -78,6 +78,11 @@ habityzer_kinde:
     
     # Optional: JWKS cache duration in seconds (default: 3600 = 1 hour)
     jwks_cache_ttl: 3600
+
+    # Optional: other Kinde applications (same business, same issuer) whose access
+    # tokens this API accepts, e.g. a native mobile app. Default [] = client_id only.
+    # With a comma-separated env var: '%env(csv:KINDE_ALLOWED_CLIENT_IDS)%' ("" = none)
+    allowed_client_ids: []
     
     # Optional: Auto-register webhook route at /api/webhooks/kinde (default: true)
     enable_webhook_route: true

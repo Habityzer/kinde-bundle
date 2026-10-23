@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `allowed_client_ids` (array, default `[]`): extra Kinde application client IDs whose access
+  tokens are accepted next to `client_id`, for a second app of the same business (e.g. a native
+  mobile app, whose `azp` differs). The audience claim is resolved as before (`aud[0]`, else
+  `azp`) and must equal `client_id` **or** be listed. Empty list = previous behaviour.
 - `email_verified` (bool|null) is now part of the user data handed to `KindeUserProviderInterface`:
   taken from the token payload when present, otherwise from Kinde's UserInfo endpoint
   (`/oauth2/v2/user_profile`, requires the `email` scope). The authenticator now consults
